@@ -17,5 +17,3 @@ sub_str
 # 조건4. 모든 원소를 쉼표에 의해서 하나의 문자열로 합치시오.
 # paste() 함수 이용
 paste(Data2, collapse = ",")
-=======
->>>>>>> 0e8baf5a4b33a8eac18217a9e41957c9db69d0f0
