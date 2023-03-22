@@ -1,14 +1,14 @@
 # Chapter 09
 
-# 실습: Oracle 데이터베이스에 연결하기 위한 패키지 설치 
-# 단계 1: 데이터베이스 연결을 위한 패키지 설치 
+# 실습: Oracle 데이터베이스에 연결하기 위한 패키지 설치
+# 단계 1: 데이터베이스 연결을 위한 패키지 설치
 install.packages("rJava")
 install.packages("DBI")
 install.packages("RJDBC")
 
 # 단계 2: 데이터베이스 연결을 위한 패키지 로딩
 library(DBI)
-Sys.setenv(JAVA_HOME = "C:\\Program Files\\Java\\jre1.8.0_251")
+Sys.setenv(JAVA_HOME = "C:\\Program Files\\Java\\jdk-17.0.5")
 library(rJava)
 library(RJDBC)
 
@@ -40,9 +40,10 @@ query = "select * from test_table where age >= 40"
 result <- dbGetQuery(conn, query)
 result
 
-# 단계 5: 레코드 수정 - name이 '강감찬'인 데이터의 age를 40으로 수정
+# 단계 5: 레코드 수정 - name이 '강감찬'인 데이터의 age를 30으로 수정
 query = "update test_table set age = 30 where name = '강감찬'"
 dbSendUpdate(conn, query)
+
 # 수정된 레코드 조회
 query = "select * from test_table where name = '강감찬'"
 dbGetQuery(conn, query)
@@ -63,7 +64,7 @@ drv <- JDBC(driverClass = "com.mysql.cj.jdbc.Driver",
 # 단계 2: MariaDB 데이터베이스 연결
 conn <- dbConnect(drv, "jdbc:mysql://127.0.0.1:3307/work", "scott", "tiger")
 
-# 실습: 데이터베이스롷부터 레코드 검색, 추가, 수정, 삭제하기 
+# 실습: 데이터베이스로부터 레코드 검색, 추가, 수정, 삭제하기 
 # 단계 1: 모든 레코드 조회
 query = "select * from goods"
 goodsAll <- dbGetQuery(conn, query)
@@ -124,22 +125,25 @@ goodsAll
 # 실습: MariaDB 연결 종료
 dbDisconnect(conn)
 
-# 실습: 형태소 분석을 위한 KoNLP 패키지 설치 
+# R 3.6.3 version
+# 실습: 형태소 분석을 위한 KoNLP 패키지 설치 - 3
 install.packages("https://cran.rstudio.com/bin/windows/contrib/3.4/KoNLP_0.80.1.zip",
                  repos = NULL)
 
-# 실습: 한글 사전과 텍스트 마이닝 관련 패키지 설치
+# 실습: 한글 사전과 텍스트 마이닝 관련 패키지 설치 - 1
 install.packages("Sejong")
 install.packages("wordcloud")
 install.packages("tm")
 
-# 실습: 패키지 로딩
+# 실습: 패키지 로딩 - 2
 #library(KoNLP)
 install.packages("hash")
 install.packages("tau")
-install.packages("devtools")
+install.packages("devtools", type = 'win.binary')
 install.packages("RSQLite")
 
+# 4
+library(rJava)
 library(KoNLP)
 library(tm)
 library(wordcloud)
@@ -170,6 +174,7 @@ facebook_nouns[1]
 
 # 실습: 추출된 단어를 대상으로 전처리하기 
 # 단계 1: 추출된 단어를 이용하여 말뭉치(Corpus) 생성
+myCorpus <- Corpus(VectorSource(facebook_nouns))
 myCorpus
 
 # 단계 2: 데이터 전처리 
