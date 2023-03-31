@@ -76,7 +76,7 @@ dim(weather)
 head(weather)
 str(weather)
 
-# 단계 2: 변수 선택과 더비 벼수 생성
+# 단계 2: 변수 선택과 더비 변수 생성
 weather_df <- weather[ , c(-1, -6, -8, -14)]
 str(weather_df)
 
@@ -95,7 +95,6 @@ weather_model <- glm(RainTomorrow ~ ., data = train, family = 'binomial')
 weather_model
 summary(weather_model)
 
-
 # 단계 5: 로지스틱 회귀모델 예측치 생성
 pred <- predict(weather_model, newdata = test, type = "response")
 pred
@@ -105,7 +104,6 @@ result_pred <- ifelse(pred >= 0.5, 1, 0)
 result_pred
 
 table(result_pred)
-
 
 # 단계 6: 모델 평가 - 분류정확도 계산
 table(result_pred, test$RainTomorrow)
@@ -118,17 +116,20 @@ pr <- prediction(pred, test$RainTomorrow)
 prf <- performance(pr, measure = "tpr", x.maeasure = "fpr")
 plot(prf)
 
-
-
-# 실습: 의사결정 트리 생성: ctree() 함수 이용 
+# 실습: 의사결정 트리 생성: ctree() 함수 이용 - 전처리/후처리 안함
 # 단계 1: party 패키지 설치 
 install.packages("party")
 library(party)
+
+# 패키지 묶어서 설치
+pkg <- c("party", "datasets")
+install.packages(pkg)
 
 # 단계 2: airquality 데이터 셋 로딩
 #install.packages("datasets")
 library(datasets)
 str(airquality)
+View(airquality)
 
 # 단계 3: formula 생성
 formula <- Temp ~ Solar.R + Wind + Ozone
@@ -140,11 +141,10 @@ air_ctree
 # 단계 5: 분류분석 결과
 plot(air_ctree)
 
-
-
+# 분류 - iris, 손글씨 분류 모델
 # 실습: 학습데이터와 검정데이터 샘플링으로 분류분석 수행
 # 단계 1: 학습데이터와 검정데이터 샘플링
-#set.seed(1234)
+set.seed(42)
 idx <- sample(1:nrow(iris), nrow(iris) * 0.7)
 train <- iris[idx, ]
 test <- iris[-idx, ]
@@ -163,7 +163,6 @@ plot(iris_ctree, type = "simple")
 # 단계 4-2: 의사결정 트리로 플로팅
 plot(iris_ctree)
 
-
 # 단계 5: 분류모델 평가
 # 단계 5-1: 모델의 예측치 생성과 혼돈 매트릭스 생성
 pred <- predict(iris_ctree, test)
@@ -171,179 +170,7 @@ pred <- predict(iris_ctree, test)
 table(pred, test$Species)
 
 # 단계 5-2: 분류 정확도 - 96%
-(14 + 16 + 13) / nrow(test)
-
-
-# 실습: K겹 교차 검정 샘플링으로 분류 분석하기 
-# 단계 1: K겹 교차 검정을 위한 샘플링 - 3겹, 2회 반복
-library(cvTools)
-cross <- cvFolds(nrow(iris), K = 3, R = 2)
-
-# 단계 2: K겹 교차 검정 데잍 보기 
-str(cross)
-cross
-length(cross$which)
-dim(cross$subsets)
-table(cross$which)
-
-
-# 단계 3: K겹 교차 검정 수행
-R = 1:2
-K = 1:3
-CNT = 0
-ACC <- numeric()
-
-for(r in R) {
-  cat('\n R = ', r, '\n')
-  for(k in K) {
-    
-    datas_ids <- cross$subsets[cross$which == k, r]
-    test <- iris[datas_ids, ]
-    cat('test : ', nrow(test), '\n')
-    
-    formual <- Species ~ .
-    train <- iris[-datas_ids, ]
-    cat('train : ', nrow(train), '\n')
-    
-    model <- ctree(Species ~ ., data = train)
-    pred <- predict(model, test)
-    t <- table(pred, test$Species)
-    print(t)
-    
-    CNT <- CNT + 1
-    ACC[CNT] <- (t[1, 1] + t[2, 2] + t[3, 3]) / sum(t)
-  }
-  
-}
-
-CNT
-
-
-# 단계 4: 교차 검정 모델 평가
-ACC
-length(ACC)
-
-result_acc <- mean(ACC, na.rm = T)
-result_acc
-
-
-# 실습: 고속도로 주행거리에 미치는 영향변수 보기 
-# 단계 1: 패키지 설치 및 로딩 
-install.packages("ggplot2")
-library(ggplot2)
-data(mpg)
-
-# 단계 2: 학습데이터와 검정데이터 생성
-t <- sample(1:nrow(mpg), 120)
-train <- mpg[-t, ]
-test <- mpg[t, ]
-dim(train)
-dim(test)
-
-# 단계 3: formula 작성과 분류모델 생성
-test$drv <- factor(test$drv)
-formula <- hwy ~ displ + cyl + drv
-tree_model <- ctree(formula, data = test)
-plot(tree_model)
-
-
-# 실습: AdultUCI 데잍 셋을 이용한 분류분석
-# 단계 1: 패키지 설치 및 데이터 셋 구조 보기 
-install.packages("arules")
-library(arules)
-data(AdultUCI)
-str(AdultUCI)
-names(AdultUCI)
-
-# 단계 2: 데이터 샘플링 - 10,000개 관측치 ㅣ선택
-set.seed(1234)
-choice <- sample(1:nrow(AdultUCI), 10000)
-choice
-
-adult.df <- AdultUCI[choice, ]
-str(adult.df)
-
-# 단계 3: 변수 추출 및 데이터프레임 생성
-# 단계 3-1: 변수 추출
-capital <- adult.df$`capital-gain`
-hours <- adult.df$`hours-per-week`
-education <- adult.df$`education-num`
-race <- adult.df$race
-age <- adult.df$age
-income <- adult.df$income
-
-# 단계 3-2: 데이터프레임 생성
-adult_df <- data.frame(capital = capital, age = age, race = race, 
-                       hours = hours, education = education, income = income)
-str(adult_df)
-
-# 단계 4: formula 생성 - 자본이득(capital)에 영향을 미치는 변수
-formula <- capital ~ income + education + hours + race + age
-
-# 단계 5: 분류모델 생성 및 예측
-adult_ctree <- ctree(formula, data = adult_df)
-adult_ctree
-
-# 단계 6: 분류모델 시각화 
-plot(adult_ctree)
-
-# 단계 7: 자본이득(capital) 요약통계량 보기 
-adultResult <- subset(adult_df, 
-                      adult_df$income == 'large' &
-                        adult_df$education > 14)
-length(adultResult$education)
-summary(adultResult$capital)
-
-boxplot(adultResult$capital)
-
-
-# 실습: rpart() 함수를 이용한 의사결정 트리 생성
-# 단계 1: 패키지 설치 및 로딩
-install.packages("rpart")
-library(rpart)
-install.packages("rpart.plot")
-library(rpart.plot)
-
-# 단계 2: 데잍 로딩
-data(iris)
-
-# 단계 3: rpart() 함수를 이용한 분류분석
-rpart_model <- rpart(Species ~ ., data = iris)
-rpart_model
-
-# 단계 4: 분류분석 시각화
-rpart.plot(rpart_model)
-
-
-
-# 실습: 날씨 데이터를 이용하여 비(rain) 유무 예측
-# 단계 1: 데이터 가져오기 
-weather = read.csv("C:/Rwork/Part-IV/weather.csv", header = TRUE)
-
-# 단계 2: 데이터 특성 보기 
-str(weather)
-head(weather)
-
-# 단계 3: 분류분석 데이터 가져오기 
-weather.df <- rpart(RainTomorrow ~ ., data = weather[ , c(-1, -14)], cp = 0.01)
-
-
-# 단계 4: 분류분석 시각화 
-rpart.plot(weather.df)
-
-# 단계 5: 예측치 생성과 코딩 변경
-# 단계 5-1: 예측치 생성
-weather_pred <- predict(weather.df, weather)
-weather_pred
-
-# 단계 5-2: y의 범주로 코딩 변환 - Yes(0.5이상), No(0.5미만)
-weather_pred2 <- ifelse(weather_pred[ , 2] >= 0.5, 'Yes', 'No')
-
-# 단계 6: 모델 평가 
-table(weather_pred2, weather$RainTomorrow)
-(278 + 53) / nrow(weather)
-
-
+(12 + 12 + 19) / nrow(test)
 
 # 실습: 랜덤 포레스트 기본 모델 생성
 # 단계 1: 패키지 설치 및 데이터 셋 가져오기 
@@ -351,11 +178,9 @@ install.packages("randomForest")
 library(randomForest)
 data(iris)
 
-# 단계 2: 랜덤 포레스트 모데 ㄹ생성
+# 단계 2: 랜덤 포레스트 모델 생성
 model <- randomForest(Species ~ ., data = iris)
 model
-
-
 
 # 실습: 파라미터 조정 - 트리 개수 300개, 변수 개수 4개 지정  
 model2 <- randomForest(Species ~ ., data = iris,
@@ -372,37 +197,6 @@ importance(model3)
  
 # 단계 3: 중요 변수 시각화
 varImpPlot(model3)
-
-
-### 엔트포리(Entropy): 불확실성
-x1 <- 0.5; x2 <- 0.5 
-e1 <- -x1 * log2(x1) - x2 * log2(x2)
-e1
-
-x1 <- 0.7; x2 <- 0.3               
-e2 <- -x1 * log2(x1) - x2 * log2(x2)
-e2
-
-
-
-# 실습: ;최적의 파라미터(ntree, mtry) 찾기 
-# 단계 1: 속성값 생성
-ntree <- c(400, 500, 600)
-mtry <- c(2:4)
-param <- data.frame(n = ntree, m = mtry)
-param
-
-# 단계 2: 이중 for() 함수를 이용하여 모델 생성
-for(i in param$n) {
-  cat('ntree =', i, '\n')
-  for(j in param$m) {
-    cat('mtry =', j, '\n')
-    model_iris <- randomForest(Species ~ ., data = iris,
-                               ntree = i, mtry = j, na.action = na.omit)
-    print(model_iris)
-  }
-}
-
 
 # 실습: 다향 분류 xgboost 모델 생성
 # 단계 1: 패키지 설치
@@ -426,7 +220,6 @@ dim(train_mat)
 
 train_lab <- train$label
 length(train_lab)
-
 
 # 단계 5: xgb.DMatrix 객체 변환
 dtrain <- xgb.DMatrix(data = train_mat, label = train_lab)
@@ -462,8 +255,6 @@ importance_matrix
 
 # 단계 12: 중요 변수 시각화 
 xgb.plot.importance(importance_matrix)
-
-
 
 # 실습: 간단한 인공신경망 모델 생성
 # 단계 1: 패키지 설치 
